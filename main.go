@@ -37,6 +37,8 @@ func getAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tasks := Tasks{
 		Task{Description:"Feed the fish.", Timestamp:time.Now(), IsCompleted:false},
+		Task{Description:"Vacuum the carpet.", Timestamp:time.Now(), IsCompleted:false},
+		Task{Description:"Clean the sink.", Timestamp:time.Now(), IsCompleted:true},
 	}
 
 	fmt.Println("Endpoint Hit: getTasks()")
