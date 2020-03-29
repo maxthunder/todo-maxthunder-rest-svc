@@ -6,11 +6,14 @@ import (
 	"log"
 	"net/http"
 	"time"
+	_ "github.com/go-sql-driver/mysql"
+	"database/sql"
 )
 
 type Task struct {
 	Description string `json:"description"`
-	Timestamp time.Time `json:"timestamp"`
+	//Timestamp time.Time `json:"timestamp"`
+	Timestamp string `json:"timestamp"`
 	IsCompleted bool `json:"isCompleted"`
 }
 
@@ -30,27 +33,50 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Homepage Endpoint Hit")
 }
 
-func getAllTasksHandler(w http.ResponseWriter, r *http.Request) {
+func getAllActiveTasksHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
 	}
 	tasks := Tasks{
-		Task{Description:"Feed the fish.", Timestamp:time.Now(), IsCompleted:false},
-		Task{Description:"Vacuum the carpet.", Timestamp:time.Now(), IsCompleted:false},
-		Task{Description:"Clean the sink.", Timestamp:time.Now(), IsCompleted:true},
+		Task{Description:"*Feed the fish.", Timestamp:"03/15/2020", IsCompleted:false},
+		Task{Description:"*Vacuum the carpet.", Timestamp:"03/20/2020", IsCompleted:false},
 	}
 
-	fmt.Println("Endpoint Hit: getTasks()")
+	fmt.Println("("+time.Now().String()+") Endpoint Hit: /activeTasks")
+	json.NewEncoder(w).Encode(tasks)
+}
+
+func getAllCompletedTasksHandler(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+	tasks := Tasks{
+		Task{Description:"*Dust the table.", Timestamp:"03/20/2020", IsCompleted:true},
+		Task{Description:"*Clean the sink.", Timestamp:"03/31/2020", IsCompleted:true},
+	}
+
+	fmt.Println("("+time.Now().String()+") Endpoint Hit: /completedTasks")
 	json.NewEncoder(w).Encode(tasks)
 }
 
 func handleRequests() {
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/tasks", getAllTasksHandler)
+	http.HandleFunc("/activeTasks", getAllActiveTasksHandler)
+	http.HandleFunc("/completedTasks", getAllCompletedTasksHandler)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func main() {
+	db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+
+	fmt.Println("Successfully connected to MySQL database.")
+
 	handleRequests()
 }

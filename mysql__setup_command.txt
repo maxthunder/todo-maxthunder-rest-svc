@@ -1,0 +1,28 @@
+-- start mySQL server
+maxwell> mysql.server start
+
+-- stop mySQL server
+maxwell> mysql.server stop
+
+-- connect to server as root user
+mysql> mysql -u root
+
+
+
+-- Create the new database (affects 1 row)
+mysql> create database shopping;
+
+-- Creates the user (affects 0 rows)
+mysql> create user 'todoDatasource_user'@'localhost' identified by 'todoDatasource_user123';
+
+-- Gives all the privileges to the new user on the newly created database (affects 0 rows)
+mysql> grant all on todoDatasource.* to 'todoDatasource_user'@'localhost';
+
+
+
+
+-- Revokes privileges
+mysql> revoke all on todoDatasource.* from 'todoDatasource_user'@'localhost';
+
+-- Grants CRUD privileges
+mysql> grant select, insert, delete, update on todoDatasource.* to 'todoDatasource_user'@'localhost';
