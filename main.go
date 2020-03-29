@@ -11,6 +11,7 @@ import (
 )
 
 type Task struct {
+	TaskId string `json:"taskID"`
 	Description string `json:"description"`
 	//Timestamp time.Time `json:"timestamp"`
 	Timestamp string `json:"timestamp"`
@@ -34,13 +35,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllActiveTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks := getAllActiveTasks(getDatabaseConnection())
+
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
-	}
-	tasks := Tasks{
-		Task{Description:"*Feed the fish.", Timestamp:"03/15/2020", IsCompleted:false},
-		Task{Description:"*Vacuum the carpet.", Timestamp:"03/20/2020", IsCompleted:false},
 	}
 
 	fmt.Println("("+time.Now().String()+") Endpoint Hit: /activeTasks")
@@ -48,17 +47,68 @@ func getAllActiveTasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllCompletedTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks := getAllCompletedTasks(getDatabaseConnection())
+
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
 	}
-	tasks := Tasks{
-		Task{Description:"*Dust the table.", Timestamp:"03/20/2020", IsCompleted:true},
-		Task{Description:"*Clean the sink.", Timestamp:"03/31/2020", IsCompleted:true},
-	}
 
 	fmt.Println("("+time.Now().String()+") Endpoint Hit: /completedTasks")
 	json.NewEncoder(w).Encode(tasks)
+}
+
+func getDatabaseConnection() *sql.DB {
+	db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
+	if err != nil {
+		panic(err.Error())
+	}
+	return db
+}
+
+func getAllTasks(db *sql.DB) Tasks {
+	return getTasks(db, true, true)
+}
+
+func getAllActiveTasks(db *sql.DB) Tasks {
+	return getTasks(db, true, false)
+}
+
+func getAllCompletedTasks(db *sql.DB) Tasks {
+	return getTasks(db, false, true)
+}
+
+func getTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tasks {
+	results, err := db.Query("SELECT * FROM task")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	tasks := Tasks{}
+
+	for results.Next() {
+		var task Task
+
+		err = results.Scan(&task.TaskId,&task.Description,&task.Timestamp,&task.IsCompleted)
+		if err != nil {
+			panic(err.Error())
+		}
+		var status string
+
+		if includeActive && !task.IsCompleted {
+			tasks = append(tasks, task)
+		}
+
+		if includeCompleted && task.IsCompleted {
+			tasks = append(tasks, task)
+		}
+
+
+		fmt.Println(task.Description+ " (" + task.Timestamp + ") -> " + status)
+	}
+	fmt.Printf("Number of tasks : %v\n", len(tasks))
+	defer db.Close()
+	return tasks
 }
 
 func handleRequests() {
@@ -68,15 +118,18 @@ func handleRequests() {
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
-func main() {
-	db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
+func insertTestData(db *sql.DB) {
+	insert, err := db.Query("INSERT INTO task (description, timestamp, isCompleted) VALUES ('Test task', now(), false)")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	defer db.Close()
+	defer insert.Close()
 
-	fmt.Println("Successfully connected to MySQL database.")
+	fmt.Println("Successful INSERT into 'task' table.")
 
-	handleRequests()
+}
+
+func main() {
+		handleRequests()
 }
