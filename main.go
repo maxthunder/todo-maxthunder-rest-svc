@@ -114,8 +114,10 @@ func postActiveTask(w http.ResponseWriter, r *http.Request) {
 
 func addNewTask(db *sql.DB, description string)  {
 	taskSql := "INSERT INTO task(description, timestamp, isCompleted) VALUES(?, ?, false)"
-	//taskSql := fmt.Sprintf("INSERT INTO task(description, timestamp, isCompleted) VALUES(%s, %s, false)", description, time.Now().String())
-	rows, err := db.Query(taskSql, description, time.Now().Format("01/01/2020 01:01"))
+	//rows, err := db.Query(taskSql, description, time.Time{}().Format("03:45PM 01-02-2030"))
+	var now = time.Now()
+	var time = fmt.Sprintf("%v %v, %v", now.Month().String(), now.Day(), now.Year())
+	rows, err := db.Query(taskSql, description, time)
 	if err != nil {
 		panic(err.Error())
 	}
