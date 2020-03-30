@@ -109,48 +109,19 @@ func postActiveTask(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
-	//json.NewEncoder(w).Encode(addNewTask(getDatabaseConnection(), task.Description))
 	addNewTask(getDatabaseConnection(), task.Description)
 }
 
 func addNewTask(db *sql.DB, description string)  {
 	taskSql := "INSERT INTO task(description, timestamp, isCompleted) VALUES(?, ?, false)"
 	//taskSql := fmt.Sprintf("INSERT INTO task(description, timestamp, isCompleted) VALUES(%s, %s, false)", description, time.Now().String())
-	rows, err := db.Query(taskSql, description, time.Now().String())
+	rows, err := db.Query(taskSql, description, time.Now().Format("01/01/2020 01:01"))
 	if err != nil {
 		panic(err.Error())
 	}
 	defer rows.Close()
 	defer db.Close()
-
-
-	//row := stmt.QueryRowContext(
-	//	context.Background(),
-	//	sql.Named("Description", description),
-	//	sql.Named("Timestamp", time.Now().String()),
-	//	sql.Named("IsCompleted", false))
-
-	//stmt.Query(description, time.Now().String(), false)
 }
-
-//func addNewTask(db *sql.DB, description string)  {
-//	taskSql := "INSERT INTO task(description, timestamp, isCompleted) VALUES(@Description, @Timestamp, @IsCompleted);"
-//	stmt, err := db.Prepare(taskSql)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	row := stmt.QueryRowContext(
-//		context.Background(),
-//		sql.Named("Description", description),
-//		sql.Named("Timestamp", time.Now().String()),
-//		sql.Named("IsCompleted", false))
-//
-//	fmt.Println(row)
-//
-//	stmt.Query(description, time.Now().String(), false)
-//}
 
 func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tasks {
 	var query string
@@ -179,7 +150,6 @@ func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tas
 		if err != nil {
 			panic(err.Error())
 		}
-		var status string
 
 		if includeActive && !task.IsCompleted {
 			tasks = append(tasks, task)
@@ -189,8 +159,7 @@ func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tas
 			tasks = append(tasks, task)
 		}
 
-
-		fmt.Println(task.Description+ " (" + task.Timestamp + ") -> " + status)
+		fmt.Println("(" + task.Timestamp + ") : " + task.Description)
 	}
 	fmt.Printf("Number of tasks returned: %v\n", len(tasks))
 	defer db.Close()
@@ -214,18 +183,6 @@ func handleRequests() {
 	Router.HandleFunc("/activeTasks", activeTasksHandler).Methods("GET")
 	Router.HandleFunc("/completedTasks", completedTasksHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8081", Router))
-}
-
-func insertTestData(db *sql.DB) {
-	insert, err := db.Query("INSERT INTO task (description, timestamp, isCompleted) VALUES ('Test task', now(), false)")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer insert.Close()
-
-	fmt.Println("Successful INSERT into 'task' table.")
-
 }
 
 func main() {
