@@ -264,7 +264,7 @@ func handleRequests() {
 	Router.HandleFunc("/tasks", deleteTask).Methods("DELETE", "OPTIONS")
 	Router.HandleFunc("/activeTasks", activeTasksHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/completedTasks", completedTasksHandler).Methods("GET")
-	log.Fatal(http.ListenAndServe(":8081", Router))
+	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), Router))
 }
 
 func main() {
