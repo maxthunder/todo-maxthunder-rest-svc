@@ -8,9 +8,11 @@ maxwell> mysql.server stop
 mysql> mysql -u root
 
 
+-- Reset Password
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';
 
 -- Create the new database (affects 1 row)
-mysql> create database shopping;
+mysql> create database todoDatasource;
 
 -- Creates the user (affects 0 rows)
 mysql> create user 'todoDatasource_user'@'localhost' identified by 'todoDatasource_user123';

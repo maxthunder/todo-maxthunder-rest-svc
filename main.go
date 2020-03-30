@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	//_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	if (*r).Method == "OPTIONS" {
 		return
 	}
-	json.NewEncoder(w).Encode("<h1>Hello World! -Go</h1>")
+	json.NewEncoder(w).Encode("200 OK")
 }
 
 // GET /tasks
@@ -139,9 +140,10 @@ func completedTasksHandler(w http.ResponseWriter, r *http.Request) {
 
 // Database Utilities
 func addNewTask(db *sql.DB, description string) bool  {
-	taskSql := "INSERT INTO task(description, timestamp, isCompleted) VALUES(?, ?, false)"
+	taskSql := "INSERT INTO todo.task(taskId, description, timestamp, iscompleted) VALUES(default, $1, $2, false);"
+
 	var now = time.Now()
-	var taskDate = fmt.Sprintf("%v %v, %v", now.Month().String(), now.Day(), now.Year())
+	var taskDate = fmt.Sprintf("%v %v %v", now.Month().String(), now.Day(), now.Year())
 	results, err := db.Query(taskSql, description, taskDate)
 	if err != nil {
 		panic(err.Error())
@@ -152,7 +154,7 @@ func addNewTask(db *sql.DB, description string) bool  {
 }
 
 func completeTask(db *sql.DB, taskId int) bool {
-	results, err := db.Query("UPDATE task SET isCompleted=true WHERE taskId=?", taskId)
+	results, err := db.Query("UPDATE todo.task SET iscompleted=true WHERE taskId=$1", taskId)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -162,7 +164,7 @@ func completeTask(db *sql.DB, taskId int) bool {
 }
 
 func updateTask(db *sql.DB, task Task) bool {
-	results, err := db.Query("UPDATE task SET description=?,timestamp=?,isCompleted=? WHERE taskId=?",
+	results, err := db.Query("UPDATE todo.task SET description=$1, timestamp=$2, iscompleted=$3 WHERE taskId=$4",
 		task.Description, task.Timestamp, task.IsCompleted, task.TaskId)
 	if err != nil {
 		panic(err.Error())
@@ -173,7 +175,7 @@ func updateTask(db *sql.DB, task Task) bool {
 }
 
 func deleteCompletedTask(db *sql.DB, taskId string) bool {
-	results, err := db.Query("DELETE FROM task WHERE taskId=?", taskId)
+	results, err := db.Query("DELETE FROM todo.task WHERE taskId=$1", taskId)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -198,11 +200,11 @@ func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tas
 	var query string
 
 	if includeActive && includeCompleted {
-		query = "SELECT * FROM task"
+		query = "SELECT * FROM todo.task"
 	} else if includeActive {
-		query = "SELECT * FROM task WHERE isCompleted = false"
+		query = "SELECT * FROM todo.task WHERE iscompleted = false"
 	} else if includeCompleted {
-		query = "SELECT * FROM task WHERE isCompleted = true"
+		query = "SELECT * FROM todo.task WHERE iscompleted = true"
 	} else {
 		panic("includeActive & includeActive cannot both be false")
 	}
@@ -235,9 +237,8 @@ func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tas
 }
 
 func getDatabaseConnection() *sql.DB {
+	db, err := sql.Open("postgres", "postgres://prlgrktludlpfy:1723a94575704248af1d99b8683452ee3de33b48d88b18856c4109662b41b995@ec2-34-206-252-187.compute-1.amazonaws.com:5432/d3tvcfn8ldd2av")
 	//db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
-	//db, err := sql.Open("mysql", "sbvixq51a98lz4wr:xa9oqclobpm6olcz@tcp(wiad5ra41q8129zn.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/y9jdhm193u0h7vei")
-	db, err := sql.Open("mysql", "sbvixq51a98lz4wr:xa9oqclobpm6olcz@wiad5ra41q8129zn.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/y9jdhm193u0h7vei")
 	if err != nil {
 		panic(err.Error())
 	}

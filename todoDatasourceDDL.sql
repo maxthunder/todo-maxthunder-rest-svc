@@ -1,4 +1,4 @@
-create schema task collate utf8_general_ci;
+create schema todo collate utf8_general_ci;
 
 create table task
 (
@@ -9,4 +9,9 @@ create table task
     constraint task_pk
         primary key (taskId)
 );
+
+# docker run --name=testsql -e MYSQL_ROOT_PASSWORD=rukshani -d mysql
+#
+
+
 

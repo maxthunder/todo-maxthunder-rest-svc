@@ -1,0 +1,50 @@
+https://www.techrepublic.com/article/how-to-deploy-and-use-a-mysql-docker-container/
+
+
+
+In order to pull the MySQL Docker image down, issue the command:
+
+    docker pull mysql/mysql-server:latest
+
+
+
+With the MySQL image on your machine, it's time to deploy the container. This is completed with the command:
+
+    docker run --name todo-container -p 3306:3306 -e MYSQL_ROOT_PASSWORD=todoDatasource_user123 mysql
+
+
+
+At this point, you can issue the command docker ps to see your MySQL container running
+
+    docker ps
+
+
+
+To see and find the generated password, issue the command:
+
+    docker logs todo-container
+    
+$> uBUsIH5ULodEdFiRIR0pOvuH3fz0
+
+
+
+Logging into MySQL server:
+
+    docker exec -it todo-container mysql -uroot -p
+    
+
+
+Reset Password
+    ALTER USER 'root'@'localhost' IDENTIFIED BY 'todoDatasource_user123';
+
+
+
+
+
+SECOND METHOD
+
+    docker run --name todo-container2 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=todoDatasource_user123 mysql
+
+    docker exec -it todo-container2 bash
+
+    mysql -u root -ptodoDatasource_user123
