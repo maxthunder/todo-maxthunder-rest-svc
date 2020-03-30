@@ -30,6 +30,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Homepage Endpoint Hit")
 }
 
+
 // GET /tasks
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -43,6 +44,64 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(tasks)
 }
+
+// POST /tasks
+func postActiveTask(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+	fmt.Println("("+time.Now().String()+") Endpoint Hit: POST /tasks")
+
+
+	//tasks := addNewTask(getDatabaseConnection())
+	decoder := json.NewDecoder(r.Body)
+	var task Task
+	err := decoder.Decode(&task)
+	if err != nil {
+		panic(err.Error())
+	}
+	if addNewTask(getDatabaseConnection(), task.Description) {
+		json.NewEncoder(w).Encode("Task with description " + task.Description + " was successfully added.")
+	}
+}
+
+// PUT /tasks
+func updateActiveTask(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+	fmt.Println("("+time.Now().String()+") Endpoint Hit: PUT /tasks")
+
+	decoder := json.NewDecoder(r.Body)
+	var task Task
+	err := decoder.Decode(&task)
+	if err != nil {
+		panic(err.Error())
+	}
+	if updateTask(getDatabaseConnection(), task) {
+		json.NewEncoder(w).Encode("Task with ID " + string(task.TaskId) + " was successfully completed.")
+	}
+}
+
+// DELETE /tasks
+func deleteTask(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+	fmt.Println("("+time.Now().String()+") Endpoint Hit: DELETE /tasks")
+
+	taskId, ok := r.URL.Query()["taskId"]
+	if !ok || len(taskId[0]) < 1 {
+		panic("Url request parameter 'taskId' is required for task deletion.")
+	}
+	if deleteCompletedTask(getDatabaseConnection(), taskId[0]) {
+		json.NewEncoder(w).Encode("Task with ID " + taskId[0] + " was successfully deleted.")
+	}
+}
+
 
 // GET /activeTasks
 func activeTasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,45 +129,6 @@ func completedTasksHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-// POST /activeTasks
-func postActiveTask(w http.ResponseWriter, r *http.Request) {
-	setupResponse(&w, r)
-	if (*r).Method == "OPTIONS" {
-		return
-	}
-	fmt.Println("("+time.Now().String()+") Endpoint Hit: POST /activeTasks")
-
-
-	//tasks := addNewTask(getDatabaseConnection())
-	decoder := json.NewDecoder(r.Body)
-	var task Task
-	err := decoder.Decode(&task)
-	if err != nil {
-		panic(err.Error())
-	}
-	if addNewTask(getDatabaseConnection(), task.Description) {
-		json.NewEncoder(w).Encode("Task with description " + task.Description + " was successfully added.")
-	}
-}
-
-// PUT /activeTasks
-func updateActiveTask(w http.ResponseWriter, r *http.Request) {
-	setupResponse(&w, r)
-	if (*r).Method == "OPTIONS" {
-		return
-	}
-	fmt.Println("("+time.Now().String()+") Endpoint Hit: PUT /activeTasks")
-
-	decoder := json.NewDecoder(r.Body)
-	var task Task
-	err := decoder.Decode(&task)
-	if err != nil {
-		panic(err.Error())
-	}
-	if completeTask(getDatabaseConnection(), task.TaskId) {
-		json.NewEncoder(w).Encode("Task with ID " + string(task.TaskId) + " successfully completed.")
-	}
-}
 
 // Database Utilities
 func addNewTask(db *sql.DB, description string) bool  {
@@ -126,6 +146,27 @@ func addNewTask(db *sql.DB, description string) bool  {
 
 func completeTask(db *sql.DB, taskId int) bool {
 	results, err := db.Query("UPDATE task SET isCompleted=true WHERE taskId=?", taskId)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer results.Close()
+	defer db.Close()
+	return true
+}
+
+func updateTask(db *sql.DB, task Task) bool {
+	results, err := db.Query("UPDATE task SET description=?,timestamp=?,isCompleted=? WHERE taskId=?",
+		task.Description, task.Timestamp, task.IsCompleted, task.TaskId)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer results.Close()
+	defer db.Close()
+	return true
+}
+
+func deleteCompletedTask(db *sql.DB, taskId string) bool {
+	results, err := db.Query("DELETE FROM task WHERE taskId=?", taskId)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -206,9 +247,10 @@ func handleRequests() {
 	Router := mux.NewRouter().StrictSlash(true)
 	Router.HandleFunc("/", indexHandler)
 	Router.HandleFunc("/tasks", getTasksHandler).Methods("GET", "OPTIONS")
-	Router.HandleFunc("/activeTasks", postActiveTask).Methods("POST", "OPTIONS")
-	Router.HandleFunc("/activeTasks", updateActiveTask).Methods("PUT", "OPTIONS")
-	Router.HandleFunc("/activeTasks", activeTasksHandler).Methods("GET")
+	Router.HandleFunc("/tasks", postActiveTask).Methods("POST", "OPTIONS")
+	Router.HandleFunc("/tasks", updateActiveTask).Methods("PUT", "OPTIONS")
+	Router.HandleFunc("/tasks", deleteTask).Methods("DELETE", "OPTIONS")
+	Router.HandleFunc("/activeTasks", activeTasksHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/completedTasks", completedTasksHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8081", Router))
 }
