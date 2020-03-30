@@ -264,7 +264,13 @@ func handleRequests() {
 	Router.HandleFunc("/tasks", deleteTask).Methods("DELETE", "OPTIONS")
 	Router.HandleFunc("/activeTasks", activeTasksHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/completedTasks", completedTasksHandler).Methods("GET")
-	log.Fatal(http.ListenAndServe(":" + os.Getenv("PORT"), Router))
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	log.Fatal(http.ListenAndServe(":" + port, Router))
 }
 
 func main() {
