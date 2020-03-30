@@ -2,11 +2,11 @@ create schema task collate utf8_general_ci;
 
 create table task
 (
-    taskID int auto_increment,
+    taskId int auto_increment,
     description varchar(255) not null,
     timestamp varchar(255) not null,
     isCompleted boolean default false not null,
     constraint task_pk
-        primary key (taskID)
+        primary key (taskId)
 );
 
