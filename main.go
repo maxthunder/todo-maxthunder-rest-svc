@@ -20,7 +20,6 @@ type Task struct {
 
 type Tasks []Task
 
-
 // GET /
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
@@ -30,6 +29,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Homepage Endpoint Hit")
 }
 
+// GET /status
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+	json.NewEncoder(w).Encode("<h1>Hello World! -Go</h1>")
+}
 
 // GET /tasks
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +253,7 @@ func setupResponse(w *http.ResponseWriter, req *http.Request) {
 func handleRequests() {
 	Router := mux.NewRouter().StrictSlash(true)
 	Router.HandleFunc("/", indexHandler)
+	Router.HandleFunc("/status", statusHandler).Methods("GET", "OPTI	ONS")
 	Router.HandleFunc("/tasks", getTasksHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/tasks", postActiveTask).Methods("POST", "OPTIONS")
 	Router.HandleFunc("/tasks", updateActiveTask).Methods("PUT", "OPTIONS")
