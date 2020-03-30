@@ -235,8 +235,8 @@ func getFilteredTasks(db *sql.DB, includeActive bool, includeCompleted bool) Tas
 }
 
 func getDatabaseConnection() *sql.DB {
-	db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
-	//db, err := sql.Open("sqlserver", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
+	//db, err := sql.Open("mysql", "todoDatasource_user:todoDatasource_user123@tcp(127.0.0.1:3306)/todoDatasource")
+	db, err := sql.Open("mysql", "sbvixq51a98lz4wr:xa9oqclobpm6olcz@tcp(wiad5ra41q8129zn.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/y9jdhm193u0h7vei")
 	if err != nil {
 		panic(err.Error())
 	}
