@@ -253,7 +253,7 @@ func setupResponse(w *http.ResponseWriter, req *http.Request) {
 func handleRequests() {
 	Router := mux.NewRouter().StrictSlash(true)
 	Router.HandleFunc("/", indexHandler)
-	Router.HandleFunc("/status", statusHandler).Methods("GET", "OPTI	ONS")
+	Router.HandleFunc("/status", statusHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/tasks", getTasksHandler).Methods("GET", "OPTIONS")
 	Router.HandleFunc("/tasks", postActiveTask).Methods("POST", "OPTIONS")
 	Router.HandleFunc("/tasks", updateActiveTask).Methods("PUT", "OPTIONS")
