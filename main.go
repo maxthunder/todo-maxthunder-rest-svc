@@ -269,7 +269,6 @@ func handleRequests() {
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
-	fmt.Println("this is your port: " + port)
 
 	log.Fatal(http.ListenAndServe(":" + port, Router))
 }

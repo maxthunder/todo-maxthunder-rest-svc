@@ -10,8 +10,3 @@ create table task
         primary key (taskId)
 );
 
-# docker run --name=testsql -e MYSQL_ROOT_PASSWORD=rukshani -d mysql
-#
-
-
-
